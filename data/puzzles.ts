@@ -55,10 +55,10 @@ export const PUZZLES: Puzzle[] = [
     ],
   },
   {
-    id: 'nike-1988',
-    brand: 'Nike',
+    id: 'lays-2025',
+    brand: 'Lays',
     brandAliases: [],
-    year: 1988,
+    year: 2025,
     stills: [
       '/puzzles/lays-2025/1.png',
       '/puzzles/lays-2025/2.png',
