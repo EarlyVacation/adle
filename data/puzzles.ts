@@ -29,7 +29,7 @@ import { Puzzle } from '@/lib/puzzles'
 
 export const PUZZLES: Puzzle[] = [
   {
-    id: 'Doritos-2015',
+    id: '1',
     brand: 'Doritos',
     brandAliases: ['Doritos'],
     year: 2015,
@@ -42,7 +42,7 @@ export const PUZZLES: Puzzle[] = [
     ],
   },
   {
-    id: 'pepsi-2018',
+    id: '2',
     brand: 'Pepsi',
     brandAliases: [],
     year: 2018,
@@ -55,7 +55,7 @@ export const PUZZLES: Puzzle[] = [
     ],
   },
   {
-    id: 'lays-2025',
+    id: '3',
     brand: 'Lays',
     brandAliases: [],
     year: 2025,
