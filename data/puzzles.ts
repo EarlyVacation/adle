@@ -60,11 +60,11 @@ export const PUZZLES: Puzzle[] = [
     brandAliases: [],
     year: 1988,
     stills: [
-      '/puzzles/nike-1988/1.jpg',
-      '/puzzles/nike-1988/2.jpg',
-      '/puzzles/nike-1988/3.jpg',
-      '/puzzles/nike-1988/4.jpg',
-      '/puzzles/nike-1988/5.jpg',
+      '/puzzles/lays-2025/1.png',
+      '/puzzles/lays-2025/2.png',
+      '/puzzles/lays-2025/3.png',
+      '/puzzles/lays-2025/4.png',
+      '/puzzles/lays-2025/5.png',
     ],
   },
 ]
