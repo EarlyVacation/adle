@@ -84,4 +84,5 @@ export const PUZZLES: Puzzle[] = [
       '/puzzles/apple-welcome-home-2018/5.png',
     ],
     videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
+   }
 ]
