@@ -127,7 +127,7 @@ export default function GameApp() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-tight">Spot the Spot</h1>
+        <h1 className="text-xl font-bold tracking-tight">Adverdle</h1>
         <div className="text-sm">
           <span className="text-gray-500">Streak </span>
           <span className="font-semibold text-white">{streak}</span>

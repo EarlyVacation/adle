@@ -1,4 +1,4 @@
-const KEY = 'spotTheSpot_streak'
+const KEY = 'adverdle_streak'
 
 export function getStreak(): number {
   if (typeof window === 'undefined') return 0
