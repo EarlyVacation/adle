@@ -71,4 +71,17 @@ export const PUZZLES: Puzzle[] = [
     ],
     videoUrl: 'https://www.youtube.com/watch?v=EBnLXlvrNng&pp=ygUVbGF5cyBjaGlwcyBjb21tZXJjaWFs',
   },
+  {
+    id: 'Apple Welcome Home',
+    brand: 'Pepsi',
+    brandAliases: [],
+    year: 2018,
+    stills: [
+      '/puzzles/apple-welcome-home-2018/1.png',
+      '/puzzles/apple-welcome-home-2018/2.png',
+      '/puzzles/apple-welcome-home-2018/3.png',
+      '/puzzles/apple-welcome-home-2018/4.png',
+      '/puzzles/apple-welcome-home-2018/5.png',
+    ],
+    videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
 ]
