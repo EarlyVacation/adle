@@ -73,7 +73,7 @@ export const PUZZLES: Puzzle[] = [
   },
   {
     id: 'Apple Welcome Home',
-    brand: 'Pepsi',
+    brand: 'Apple',
     brandAliases: [],
     year: 2018,
     stills: [
