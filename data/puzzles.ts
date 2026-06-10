@@ -22,6 +22,7 @@
  *        '/puzzles/budweiser-1995/4.jpg',
  *        '/puzzles/budweiser-1995/5.jpg',
  *      ],
+ *      videoUrl: 'https://www.youtube.com/watch?v=XXXXXXXXXXX',
  *    },
  */
 
@@ -40,6 +41,7 @@ export const PUZZLES: Puzzle[] = [
       '/puzzles/doritos-2015/4.png',
       '/puzzles/doritos-2015/5.png',
     ],
+    videoUrl: 'https://youtu.be/X96RjH8WC5o?si=QS7Kei6NiDEZnoFT',
   },
   {
     id: '2',
@@ -53,6 +55,7 @@ export const PUZZLES: Puzzle[] = [
       '/puzzles/pepsi-2018/4.png',
       '/puzzles/pepsi-2018/5.png',
     ],
+    videoUrl: 'https://www.youtube.com/watch?v=tJCcnkqnjqU',
   },
   {
     id: '3',
@@ -66,5 +69,6 @@ export const PUZZLES: Puzzle[] = [
       '/puzzles/lays-2025/4.png',
       '/puzzles/lays-2025/5.png',
     ],
+    videoUrl: 'https://www.youtube.com/watch?v=EBnLXlvrNng&pp=ygUVbGF5cyBjaGlwcyBjb21tZXJjaWFs',
   },
 ]

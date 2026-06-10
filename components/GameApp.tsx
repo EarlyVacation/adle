@@ -8,6 +8,7 @@ import BrandAutocomplete from './BrandAutocomplete'
 import GuessMarkers from './GuessMarkers'
 import GuessHistory from './GuessHistory'
 import DevControls from './DevControls'
+import PayoffVideo from './PayoffVideo'
 
 type GameStatus = 'playing' | 'won' | 'lost'
 
@@ -144,23 +145,25 @@ export default function GameApp() {
 
       {/* Result banner */}
       {status === 'won' && (
-        <div className="bg-green-950/60 border border-green-800 rounded-xl px-4 py-4 text-center">
-          <p className="text-green-400 font-semibold text-lg">
+        <div className="bg-green-950/60 border border-green-800 rounded-xl px-4 py-4">
+          <p className="text-green-400 font-semibold text-lg text-center">
             Solved in {revealedStills} {revealedStills === 1 ? 'still' : 'stills'}
           </p>
-          <p className="text-green-700 text-sm mt-1">Streak: {streak}</p>
+          <p className="text-green-700 text-sm mt-1 text-center">Streak: {streak}</p>
+          <PayoffVideo url={puzzle.videoUrl} />
         </div>
       )}
 
       {status === 'lost' && (
-        <div className="bg-red-950/60 border border-red-900 rounded-xl px-4 py-4 text-center">
-          <p className="text-red-400 font-semibold">Out of guesses</p>
-          <p className="text-gray-300 text-sm mt-1">
+        <div className="bg-red-950/60 border border-red-900 rounded-xl px-4 py-4">
+          <p className="text-red-400 font-semibold text-center">Out of guesses</p>
+          <p className="text-gray-300 text-sm mt-1 text-center">
             It was{' '}
             <span className="font-bold text-white">{puzzle.brand}</span>
             {', '}
             <span className="font-bold text-white">{puzzle.year}</span>
           </p>
+          <PayoffVideo url={puzzle.videoUrl} />
         </div>
       )}
 

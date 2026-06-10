@@ -4,5 +4,6 @@ export type Puzzle = {
   brandAliases: string[]
   year: number
   stills: string[]
+  videoUrl: string
 }
 
