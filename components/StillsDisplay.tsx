@@ -20,7 +20,10 @@ function Still({ index, src, onExpand }: { index: number; src: string; onExpand:
 
   return (
     <div
-      className={`relative flex-shrink-0 w-[80%] aspect-video rounded-xl snap-start bg-gradient-to-br ${STILL_GRADIENTS[index]} border border-white/10 overflow-hidden cursor-pointer active:opacity-90`}
+      // flex-none = no shrink, no grow. w-[85vw] is viewport-relative so it
+      // doesn't get misresolved against the flex container's constrained width.
+      // max-w-[420px] caps it on wide screens.
+      className={`relative flex-none w-[85vw] max-w-[420px] aspect-video rounded-xl snap-start bg-gradient-to-br ${STILL_GRADIENTS[index]} border border-white/10 overflow-hidden cursor-pointer active:opacity-90`}
       onClick={onExpand}
     >
       <span className="absolute top-2 left-3 z-10 text-xs text-white/30 font-mono select-none">
@@ -46,7 +49,7 @@ export default function StillsDisplay({ stills, revealedCount }: Props) {
   const stripRef = useRef<HTMLDivElement>(null)
   const [lightbox, setLightbox] = useState<string | null>(null)
 
-  // Auto-scroll to the newest still when it's revealed
+  // Auto-scroll to the newest still when revealed
   useEffect(() => {
     const el = stripRef.current
     if (!el || revealedCount === 0) return
@@ -54,16 +57,49 @@ export default function StillsDisplay({ stills, revealedCount }: Props) {
     if (last) el.scrollTo({ left: last.offsetLeft, behavior: 'smooth' })
   }, [revealedCount])
 
+  function scrollBy(dir: -1 | 1) {
+    const el = stripRef.current
+    if (!el) return
+    // Scroll exactly one frame + gap
+    const frame = el.firstElementChild as HTMLElement | null
+    const step = frame ? frame.offsetWidth + 12 : el.clientWidth
+    el.scrollBy({ left: dir * step, behavior: 'smooth' })
+  }
+
   return (
     <>
-      <div
-        ref={stripRef}
-        className="flex gap-2 overflow-x-auto snap-x snap-mandatory scroll-smooth"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
-      >
-        {stills.slice(0, revealedCount).map((src, i) => (
-          <Still key={src} index={i} src={src} onExpand={() => setLightbox(src)} />
-        ))}
+      {/*
+        -mx-4 cancels main's px-4 so the strip reaches the viewport edges,
+        preventing the padded container from acting as a clip boundary.
+      */}
+      <div className="relative -mx-4">
+
+        {/* Arrow buttons: desktop/pointer devices only */}
+        <button
+          onClick={() => scrollBy(-1)}
+          aria-label="Previous still"
+          className="hidden md:flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/60 border border-white/10 text-white/70 hover:text-white hover:bg-black/80 transition-colors text-xl select-none"
+        >
+          ‹
+        </button>
+        <button
+          onClick={() => scrollBy(1)}
+          aria-label="Next still"
+          className="hidden md:flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/60 border border-white/10 text-white/70 hover:text-white hover:bg-black/80 transition-colors text-xl select-none"
+        >
+          ›
+        </button>
+
+        {/* Scrollable strip — pl/pr restore the inset the -mx-4 removed */}
+        <div
+          ref={stripRef}
+          className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pl-4 pr-4 pb-1"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+        >
+          {stills.slice(0, revealedCount).map((src, i) => (
+            <Still key={src} index={i} src={src} onExpand={() => setLightbox(src)} />
+          ))}
+        </div>
       </div>
 
       {lightbox && (
