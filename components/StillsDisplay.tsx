@@ -95,7 +95,7 @@ export default function StillsDisplay({ stills, revealedCount }: Props) {
         <div
           ref={stripRef}
           className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pl-4 pr-4 pb-1"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', justifyContent: 'safe center' } as React.CSSProperties}
         >
           {stills.slice(0, revealedCount).map((src, i) => (
             <Still key={src} index={i} src={src} onExpand={() => setLightbox(src)} />
