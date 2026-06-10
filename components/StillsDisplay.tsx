@@ -20,10 +20,9 @@ function Still({ index, src, onExpand }: { index: number; src: string; onExpand:
 
   return (
     <div
-      // flex-none = no shrink, no grow. w-[85vw] is viewport-relative so it
-      // doesn't get misresolved against the flex container's constrained width.
-      // max-w-[420px] caps it on wide screens.
-      className={`relative flex-none w-[85vw] max-w-[420px] aspect-video rounded-xl snap-start bg-gradient-to-br ${STILL_GRADIENTS[index]} border border-white/10 overflow-hidden cursor-pointer active:opacity-90`}
+      // w-[90vw] max-w-[700px]: viewport-relative so frames are truly large.
+      // On mobile: ~337px; on desktop: up to 700px (double the old 420px cap).
+      className={`relative flex-none w-[90vw] max-w-[700px] aspect-video rounded-xl snap-start bg-gradient-to-br ${STILL_GRADIENTS[index]} border border-white/10 overflow-hidden cursor-pointer active:opacity-90`}
       onClick={onExpand}
     >
       <span className="absolute top-2 left-3 z-10 text-xs text-white/30 font-mono select-none">
@@ -49,7 +48,6 @@ export default function StillsDisplay({ stills, revealedCount }: Props) {
   const stripRef = useRef<HTMLDivElement>(null)
   const [lightbox, setLightbox] = useState<string | null>(null)
 
-  // Auto-scroll to the newest still when revealed
   useEffect(() => {
     const el = stripRef.current
     if (!el || revealedCount === 0) return
@@ -60,7 +58,6 @@ export default function StillsDisplay({ stills, revealedCount }: Props) {
   function scrollBy(dir: -1 | 1) {
     const el = stripRef.current
     if (!el) return
-    // Scroll exactly one frame + gap
     const frame = el.firstElementChild as HTMLElement | null
     const step = frame ? frame.offsetWidth + 12 : el.clientWidth
     el.scrollBy({ left: dir * step, behavior: 'smooth' })
@@ -69,28 +66,32 @@ export default function StillsDisplay({ stills, revealedCount }: Props) {
   return (
     <>
       {/*
-        -mx-4 cancels main's px-4 so the strip reaches the viewport edges,
-        preventing the padded container from acting as a clip boundary.
+        Full-bleed wrapper:
+        - w-screen + left-[calc(-50vw+50%)] expands from max-w-lg to full viewport
+          width regardless of the centering offset of the parent container.
+        - [overflow:clip] prevents the wider element from triggering a body-level
+          horizontal scrollbar; unlike overflow:hidden it doesn't create a new
+          scroll container, so the inner strip can still scroll independently.
       */}
-      <div className="relative -mx-4">
+      <div className="relative w-screen left-[calc(-50vw+50%)] [overflow:clip]">
 
-        {/* Arrow buttons: desktop/pointer devices only */}
+        {/* Arrow buttons — desktop/pointer devices only */}
         <button
           onClick={() => scrollBy(-1)}
           aria-label="Previous still"
-          className="hidden md:flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/60 border border-white/10 text-white/70 hover:text-white hover:bg-black/80 transition-colors text-xl select-none"
+          className="hidden md:flex items-center justify-center absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 border border-white/10 text-white/70 hover:text-white hover:bg-black/80 transition-colors text-2xl select-none"
         >
           ‹
         </button>
         <button
           onClick={() => scrollBy(1)}
           aria-label="Next still"
-          className="hidden md:flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/60 border border-white/10 text-white/70 hover:text-white hover:bg-black/80 transition-colors text-xl select-none"
+          className="hidden md:flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 border border-white/10 text-white/70 hover:text-white hover:bg-black/80 transition-colors text-2xl select-none"
         >
           ›
         </button>
 
-        {/* Scrollable strip — pl/pr restore the inset the -mx-4 removed */}
+        {/* Scrollable strip — pl/pr align content with the page's text column */}
         <div
           ref={stripRef}
           className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pl-4 pr-4 pb-1"
