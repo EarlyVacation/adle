@@ -92,12 +92,12 @@ export const PUZZLES: Puzzle[] = [
     year: 2025,
     stills: [
       '/puzzles/mountain-dew-2025/1.png',
-      '/puzzles/mountain-dew-20258/2.png',
+      '/puzzles/mountain-dew-2025/2.png',
       '/puzzles/mountain-dew-2025/3.png',
       '/puzzles/mountain-dew-2025/4.png',
       '/puzzles/mountain-dew-2025/5.png',
     ],
-    videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
+    videoUrl: 'https://www.youtube.com/watch?v=h5L9-wNnPOA&pp=ygUUYmFqIGJsYXN0IGNvbW1lcmNpYWw%3D',
    },
    {
     id: 'Little Caesars - sliced Bread',
