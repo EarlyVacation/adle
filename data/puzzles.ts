@@ -84,5 +84,33 @@ export const PUZZLES: Puzzle[] = [
       '/puzzles/apple-welcome-home-2018/5.png',
     ],
     videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
+   },
+   {
+    id: 'Mountain Dew',
+    brand: 'Mountain Dew',
+    brandAliases: [],
+    year: 2025,
+    stills: [
+      '/puzzles/mountain-dew-2025/1.png',
+      '/puzzles/mountain-dew-20258/2.png',
+      '/puzzles/mountain-dew-2025/3.png',
+      '/puzzles/mountain-dew-2025/4.png',
+      '/puzzles/mountain-dew-2025/5.png',
+    ],
+    videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
+   },
+id: 'Mountain Dew',
+    brand: 'Mountain Dew',
+    brandAliases: [],
+    year: 2025,
+    stills: [
+      '/puzzles/little-caesars-2020/1.png',
+      '/puzzles/little-caesars-2020/2.png',
+      '/puzzles/little-caesars-2020/3.png',
+      '/puzzles/little-caesars-2020/4.png',
+      '/puzzles/little-caesars-2020/5.png',
+    ],
+    videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
    }
+
 ]
