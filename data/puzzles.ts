@@ -99,7 +99,8 @@ export const PUZZLES: Puzzle[] = [
     ],
     videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
    },
-id: 'Mountain Dew',
+   {
+    id: 'Mountain Dew',
     brand: 'Mountain Dew',
     brandAliases: [],
     year: 2025,
