@@ -112,6 +112,19 @@ export const PUZZLES: Puzzle[] = [
       '/puzzles/little-caesars-2020/5.png',
     ],
     videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
+   },
+   {
+    id: 'Nutrigrain',
+    brand: 'Nutrigrain',
+    brandAliases: [],
+    year: 2006,
+    stills: [
+      '/puzzles/nutrigrain-20060/1.png',
+      '/puzzles/nutrigrain-2006/2.png',
+      '/puzzles/nutrigrain-2006/3.png',
+      '/puzzles/nutrigrain-2006/4.png',
+      '/puzzles/nutrigrain-2006/5.png',
+    ],
+    videoUrl: 'https://www.youtube.com/watch?v=Y6rE0EakhG8',
    }
-
 ]
