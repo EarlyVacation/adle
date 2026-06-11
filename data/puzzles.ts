@@ -119,7 +119,7 @@ export const PUZZLES: Puzzle[] = [
     brandAliases: [],
     year: 2006,
     stills: [
-      '/puzzles/nutrigrain-20060/1.png',
+      '/puzzles/nutrigrain-2006/1.png',
       '/puzzles/nutrigrain-2006/2.png',
       '/puzzles/nutrigrain-2006/3.png',
       '/puzzles/nutrigrain-2006/4.png',
