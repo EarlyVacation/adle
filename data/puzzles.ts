@@ -129,7 +129,7 @@ export const PUZZLES: Puzzle[] = [
    },
    {
     id: 'Bob Mills Mitsubishi',
-    brand: 'Bob Mills Mitsubishi',
+    brand: 'Mitsubishi',
     brandAliases: [],
     year: 2021,
     stills: [
