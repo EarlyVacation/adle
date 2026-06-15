@@ -30,19 +30,19 @@ import { Puzzle } from '@/lib/puzzles'
 
 export const PUZZLES: Puzzle[] = [
   {
-    id: '1',
-    brand: 'Doritos',
-    brandAliases: ['Doritos'],
-    year: 2015,
+    id: 'Apple Welcome Home',
+    brand: 'Apple',
+    brandAliases: [],
+    year: 2018,
     stills: [
-      '/puzzles/doritos-2015/1.png',
-      '/puzzles/doritos-2015/2.png',
-      '/puzzles/doritos-2015/3.png',
-      '/puzzles/doritos-2015/4.png',
-      '/puzzles/doritos-2015/5.png',
+      '/puzzles/apple-welcome-home-2018/1.png',
+      '/puzzles/apple-welcome-home-2018/2.png',
+      '/puzzles/apple-welcome-home-2018/3.png',
+      '/puzzles/apple-welcome-home-2018/4.png',
+      '/puzzles/apple-welcome-home-2018/5.png',
     ],
-    videoUrl: 'https://youtu.be/X96RjH8WC5o?si=QS7Kei6NiDEZnoFT',
-  },
+    videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
+   },
   {
     id: '2',
     brand: 'Pepsi',
@@ -72,20 +72,6 @@ export const PUZZLES: Puzzle[] = [
     videoUrl: 'https://www.youtube.com/watch?v=EBnLXlvrNng&pp=ygUVbGF5cyBjaGlwcyBjb21tZXJjaWFs',
   },
   {
-    id: 'Apple Welcome Home',
-    brand: 'Apple',
-    brandAliases: [],
-    year: 2018,
-    stills: [
-      '/puzzles/apple-welcome-home-2018/1.png',
-      '/puzzles/apple-welcome-home-2018/2.png',
-      '/puzzles/apple-welcome-home-2018/3.png',
-      '/puzzles/apple-welcome-home-2018/4.png',
-      '/puzzles/apple-welcome-home-2018/5.png',
-    ],
-    videoUrl: 'https://www.youtube.com/watch?v=Xwc22EK8qE0&list=RDXwc22EK8qE0&start_radio=1',
-   },
-   {
     id: 'Mountain Dew - Baja',
     brand: 'Mountain Dew',
     brandAliases: [],
