@@ -32,6 +32,13 @@ export default function GameApp() {
 
   useEffect(() => {
     setStreak(getStreak())
+    // ?puzzle=<index> lets you preview a specific puzzle on the live site
+    const params = new URLSearchParams(window.location.search)
+    const p = params.get('puzzle')
+    if (p !== null) {
+      const idx = parseInt(p, 10)
+      if (!isNaN(idx) && idx >= 0 && idx < PUZZLES.length) setPuzzleIndex(idx)
+    }
   }, [])
 
   const puzzle = PUZZLES[puzzleIndex]
@@ -134,8 +141,10 @@ export default function GameApp() {
         </div>
       </div>
 
-      {/* Dev controls */}
-      <DevControls puzzleIndex={puzzleIndex} onChange={resetGame} />
+      {/* Dev controls — only rendered in local development, never on Vercel */}
+      {process.env.NODE_ENV === 'development' && (
+        <DevControls puzzleIndex={puzzleIndex} onChange={resetGame} />
+      )}
 
       {/* Stills */}
       <StillsDisplay stills={puzzle.stills} revealedCount={revealedStills} />
