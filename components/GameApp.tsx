@@ -141,27 +141,6 @@ export default function GameApp() {
         </div>
       </div>
 
-      {/* Puzzle navigation */}
-      <div className="flex items-center justify-center gap-4">
-        <button
-          onClick={() => resetGame((puzzleIndex - 1 + PUZZLES.length) % PUZZLES.length)}
-          aria-label="Previous puzzle"
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-gray-400 hover:text-white transition-colors text-lg leading-none select-none"
-        >
-          ‹
-        </button>
-        <span className="text-xs text-gray-500 tabular-nums">
-          {puzzleIndex + 1} / {PUZZLES.length}
-        </span>
-        <button
-          onClick={() => resetGame((puzzleIndex + 1) % PUZZLES.length)}
-          aria-label="Next puzzle"
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-gray-400 hover:text-white transition-colors text-lg leading-none select-none"
-        >
-          ›
-        </button>
-      </div>
-
       {/* Dev controls — only rendered in local development, never on Vercel */}
       {process.env.NODE_ENV === 'development' && (
         <DevControls puzzleIndex={puzzleIndex} onChange={resetGame} />
@@ -259,6 +238,27 @@ export default function GameApp() {
           )}
         </div>
       )}
+
+      {/* Puzzle navigation */}
+      <div className="flex items-center justify-center gap-4">
+        <button
+          onClick={() => resetGame((puzzleIndex - 1 + PUZZLES.length) % PUZZLES.length)}
+          aria-label="Previous puzzle"
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-gray-400 hover:text-white transition-colors text-lg leading-none select-none"
+        >
+          ‹
+        </button>
+        <span className="text-xs text-gray-500 tabular-nums">
+          {puzzleIndex + 1} / {PUZZLES.length}
+        </span>
+        <button
+          onClick={() => resetGame((puzzleIndex + 1) % PUZZLES.length)}
+          aria-label="Next puzzle"
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-gray-400 hover:text-white transition-colors text-lg leading-none select-none"
+        >
+          ›
+        </button>
+      </div>
 
       {/* Guess history */}
       <GuessHistory guesses={guesses} />
