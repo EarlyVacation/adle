@@ -52,7 +52,7 @@ export function evaluateGuess(puzzle: Puzzle, brand: string, year: number): Gues
   }
 
   const yearDiff = year - puzzle.year
-  const yearWithinRange = Math.abs(yearDiff) <= 2
+  const yearWithinRange = yearDiff === 0
   let yearFeedback: YearFeedback
   if (yearWithinRange) {
     yearFeedback = 'correct'

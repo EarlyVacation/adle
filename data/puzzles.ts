@@ -58,6 +58,20 @@ export const PUZZLES: Puzzle[] = [
     videoUrl: 'https://www.youtube.com/watch?v=tJCcnkqnjqU',
   },
   {
+    id: 'Bob Mills Mitsubishi',
+    brand: 'Mitsubishi',
+    brandAliases: [],
+    year: 2021,
+    stills: [
+      '/puzzles/bob-mills-mitsubishi-2021/1.png',
+      '/puzzles/bob-mills-mitsubishi-2021/2.png',
+      '/puzzles/bob-mills-mitsubishi-2021/3.png',
+      '/puzzles/bob-mills-mitsubishi-2021/4.png',
+      '/puzzles/bob-mills-mitsubishi-2021/5.png',
+    ],
+    videoUrl: 'https://www.youtube.com/watch?v=uQdqx5hA28g',
+   },
+  {
     id: '3',
     brand: 'Lays',
     brandAliases: [],
@@ -112,19 +126,5 @@ export const PUZZLES: Puzzle[] = [
       '/puzzles/nutrigrain-2006/5.png',
     ],
     videoUrl: 'https://www.youtube.com/watch?v=Y6rE0EakhG8',
-   },
-   {
-    id: 'Bob Mills Mitsubishi',
-    brand: 'Mitsubishi',
-    brandAliases: [],
-    year: 2021,
-    stills: [
-      '/puzzles/bob-mills-mitsubishi-2021/1.png',
-      '/puzzles/bob-mills-mitsubishi-2021/2.png',
-      '/puzzles/bob-mills-mitsubishi-2021/3.png',
-      '/puzzles/bob-mills-mitsubishi-2021/4.png',
-      '/puzzles/bob-mills-mitsubishi-2021/5.png',
-    ],
-    videoUrl: 'https://www.youtube.com/watch?v=uQdqx5hA28g',
    }
 ]
