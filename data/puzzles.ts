@@ -70,7 +70,7 @@ export const PUZZLES: Puzzle[] = [
       '/puzzles/bob-mills-mitsubishi-2021/5.png',
     ],
     videoUrl: 'https://www.youtube.com/watch?v=uQdqx5hA28g',
-   },
+  },
   {
     id: '3',
     brand: 'Lays',
