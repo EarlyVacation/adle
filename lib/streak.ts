@@ -1,4 +1,4 @@
-const KEY = 'adverdle_streak'
+const KEY = 'adle_streak'
 
 export function getStreak(): number {
   if (typeof window === 'undefined') return 0
