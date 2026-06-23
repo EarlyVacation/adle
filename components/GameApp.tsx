@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { PUZZLES } from '@/data/puzzles'
+import { fetchPuzzles } from '@/lib/fetchPuzzles'
+import type { Puzzle } from '@/lib/puzzles'
 import { evaluateGuess, GuessResult } from '@/lib/gameLogic'
 import { getStreak, incrementStreak, resetStreak } from '@/lib/streak'
 import StillsDisplay from './StillsDisplay'
@@ -14,7 +15,26 @@ type GameStatus = 'playing' | 'won' | 'lost'
 
 const MAX_GUESSES = 5
 
+// Days since Unix epoch for today's date in the America/Halifax timezone.
+// Used to pick which puzzle to show by default.
+function getDailyPuzzleIndex(totalPuzzles: number): number {
+  const halifaxDate = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Halifax',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+  // en-CA always produces YYYY-MM-DD; parse as UTC midnight for a stable number
+  const dayNumber = Math.floor(Date.parse(halifaxDate + 'T00:00:00Z') / 86_400_000)
+  return dayNumber % totalPuzzles
+}
+
 export default function GameApp() {
+  // ── data ──────────────────────────────────────────────────────────────────
+  const [puzzles, setPuzzles] = useState<Puzzle[] | null>(null) // null = loading
+  const [fetchError, setFetchError] = useState<string | null>(null)
+
+  // ── game state ────────────────────────────────────────────────────────────
   const [puzzleIndex, setPuzzleIndex] = useState(0)
   const [guesses, setGuesses] = useState<GuessResult[]>([])
   const [status, setStatus] = useState<GameStatus>('playing')
@@ -30,19 +50,35 @@ export default function GameApp() {
   const brandInputRef = useRef<HTMLInputElement>(null)
   const yearInputRef = useRef<HTMLInputElement>(null)
 
+  // ── fetch on mount ────────────────────────────────────────────────────────
   useEffect(() => {
     setStreak(getStreak())
-    // ?puzzle=<index> lets you preview a specific puzzle on the live site
-    const params = new URLSearchParams(window.location.search)
-    const p = params.get('puzzle')
-    if (p !== null) {
-      const idx = parseInt(p, 10)
-      if (!isNaN(idx) && idx >= 0 && idx < PUZZLES.length) setPuzzleIndex(idx)
-    }
+
+    fetchPuzzles()
+      .then(fetched => {
+        setPuzzles(fetched)
+        if (fetched.length === 0) return
+
+        // ?puzzle=<index> lets you preview a specific puzzle on the live site
+        const params = new URLSearchParams(window.location.search)
+        const override = params.get('puzzle')
+        if (override !== null) {
+          const idx = parseInt(override, 10)
+          if (!isNaN(idx) && idx >= 0 && idx < fetched.length) {
+            setPuzzleIndex(idx)
+            return
+          }
+        }
+
+        setPuzzleIndex(getDailyPuzzleIndex(fetched.length))
+      })
+      .catch(err => {
+        console.error('Failed to fetch puzzles from Supabase:', err)
+        setFetchError('Could not load today\'s puzzle. Please check your connection and try again.')
+      })
   }, [])
 
-  const puzzle = PUZZLES[puzzleIndex]
-
+  // ── game actions ──────────────────────────────────────────────────────────
   function resetGame(newIndex: number) {
     setPuzzleIndex(newIndex)
     setGuesses([])
@@ -57,7 +93,7 @@ export default function GameApp() {
   }
 
   function handleGuess() {
-    if (status !== 'playing') return
+    if (status !== 'playing' || !puzzles) return
 
     const brandToUse = brandLocked ? lockedBrandValue : brandInput.trim()
     const parsedYear = parseInt(yearInput, 10)
@@ -66,6 +102,7 @@ export default function GameApp() {
     if (!brandLocked && !brandToUse) return
     if (!yearLocked && (isNaN(parsedYear) || parsedYear < 1950 || parsedYear > 2025)) return
 
+    const puzzle = puzzles[puzzleIndex]
     const result = evaluateGuess(puzzle, brandToUse, yearToUse)
     const newGuesses = [...guesses, result]
     setGuesses(newGuesses)
@@ -109,6 +146,7 @@ export default function GameApp() {
     }, 0)
   }
 
+  // ── derived ───────────────────────────────────────────────────────────────
   const parsedYear = parseInt(yearInput, 10)
   const yearValid = yearLocked || (!isNaN(parsedYear) && parsedYear >= 1950 && parsedYear <= 2025)
   const brandValid = brandLocked || brandInput.trim() !== ''
@@ -129,6 +167,42 @@ export default function GameApp() {
     return null
   }
 
+  // ── shell (always rendered, shared by all states) ─────────────────────────
+  const shell = (children: React.ReactNode) => (
+    <main className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold tracking-tight">Adle</h1>
+        <div className="text-sm">
+          <span className="text-gray-500">Streak </span>
+          <span className="font-semibold text-white">{streak}</span>
+        </div>
+      </div>
+      {children}
+    </main>
+  )
+
+  // ── loading ───────────────────────────────────────────────────────────────
+  if (fetchError) {
+    return shell(
+      <p className="text-red-400 text-sm text-center py-12">{fetchError}</p>
+    )
+  }
+
+  if (puzzles === null) {
+    return shell(
+      <p className="text-gray-500 text-sm text-center py-12">Loading…</p>
+    )
+  }
+
+  if (puzzles.length === 0) {
+    return shell(
+      <p className="text-gray-400 text-sm text-center py-12">No puzzle today — check back soon.</p>
+    )
+  }
+
+  // ── game ──────────────────────────────────────────────────────────────────
+  const puzzle = puzzles[puzzleIndex]
+
   return (
     <main className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-5">
 
@@ -143,7 +217,7 @@ export default function GameApp() {
 
       {/* Dev controls — only rendered in local development, never on Vercel */}
       {process.env.NODE_ENV === 'development' && (
-        <DevControls puzzleIndex={puzzleIndex} onChange={resetGame} />
+        <DevControls puzzles={puzzles} puzzleIndex={puzzleIndex} onChange={resetGame} />
       )}
 
       {/* Stills */}
@@ -159,7 +233,7 @@ export default function GameApp() {
             Solved in {revealedStills} {revealedStills === 1 ? 'still' : 'stills'}
           </p>
           <p className="text-green-700 text-sm mt-1 text-center">Streak: {streak}</p>
-          <PayoffVideo url={puzzle.videoUrl} />
+          {puzzle.videoUrl && <PayoffVideo url={puzzle.videoUrl} />}
         </div>
       )}
 
@@ -172,7 +246,7 @@ export default function GameApp() {
             {', '}
             <span className="font-bold text-white">{puzzle.year}</span>
           </p>
-          <PayoffVideo url={puzzle.videoUrl} />
+          {puzzle.videoUrl && <PayoffVideo url={puzzle.videoUrl} />}
         </div>
       )}
 
@@ -242,17 +316,17 @@ export default function GameApp() {
       {/* Puzzle navigation */}
       <div className="flex items-center justify-center gap-4">
         <button
-          onClick={() => resetGame((puzzleIndex - 1 + PUZZLES.length) % PUZZLES.length)}
+          onClick={() => resetGame((puzzleIndex - 1 + puzzles.length) % puzzles.length)}
           aria-label="Previous puzzle"
           className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-gray-400 hover:text-white transition-colors text-lg leading-none select-none"
         >
           ‹
         </button>
         <span className="text-xs text-gray-500 tabular-nums">
-          {puzzleIndex + 1} / {PUZZLES.length}
+          {puzzleIndex + 1} / {puzzles.length}
         </span>
         <button
-          onClick={() => resetGame((puzzleIndex + 1) % PUZZLES.length)}
+          onClick={() => resetGame((puzzleIndex + 1) % puzzles.length)}
           aria-label="Next puzzle"
           className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-gray-400 hover:text-white transition-colors text-lg leading-none select-none"
         >
