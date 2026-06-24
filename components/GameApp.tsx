@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { fetchPuzzles } from '@/lib/fetchPuzzles'
 import type { Puzzle } from '@/lib/puzzles'
+import { PUZZLE_CATEGORIES } from '@/lib/puzzles'
 import { evaluateGuess, GuessResult } from '@/lib/gameLogic'
 import { getStreak, incrementStreak, resetStreak } from '@/lib/streak'
 import StillsDisplay from './StillsDisplay'
@@ -40,6 +41,9 @@ export default function GameApp() {
   const [status, setStatus] = useState<GameStatus>('playing')
   const [revealedStills, setRevealedStills] = useState(1)
   const [streak, setStreak] = useState(0)
+  const [categoryInput, setCategoryInput] = useState('')
+  const [categoryLocked, setCategoryLocked] = useState(false)
+  const [lockedCategoryValue, setLockedCategoryValue] = useState('')
   const [brandInput, setBrandInput] = useState('')
   const [yearInput, setYearInput] = useState('')
   const [brandLocked, setBrandLocked] = useState(false)
@@ -84,6 +88,9 @@ export default function GameApp() {
     setGuesses([])
     setStatus('playing')
     setRevealedStills(1)
+    setCategoryInput('')
+    setCategoryLocked(false)
+    setLockedCategoryValue('')
     setBrandInput('')
     setYearInput('')
     setBrandLocked(false)
@@ -95,20 +102,29 @@ export default function GameApp() {
   function handleGuess() {
     if (status !== 'playing' || !puzzles) return
 
+    const categoryToUse = categoryLocked ? lockedCategoryValue : categoryInput
     const brandToUse = brandLocked ? lockedBrandValue : brandInput.trim()
     const parsedYear = parseInt(yearInput, 10)
     const yearToUse = yearLocked ? lockedYearValue : parsedYear
 
+    if (!categoryLocked && !categoryToUse) return
     if (!brandLocked && !brandToUse) return
     if (!yearLocked && (isNaN(parsedYear) || parsedYear < 1950 || parsedYear > 2025)) return
 
     const puzzle = puzzles[puzzleIndex]
-    const result = evaluateGuess(puzzle, brandToUse, yearToUse)
+    const result = evaluateGuess(puzzle, brandToUse, yearToUse, categoryToUse)
     const newGuesses = [...guesses, result]
     setGuesses(newGuesses)
 
+    let newCategoryLocked = categoryLocked
     let newBrandLocked = brandLocked
     let newYearLocked = yearLocked
+
+    if (!categoryLocked && result.categoryCorrect) {
+      setCategoryLocked(true)
+      setLockedCategoryValue(categoryToUse)
+      newCategoryLocked = true
+    }
 
     if (!brandLocked && result.brandCorrect) {
       setBrandLocked(true)
@@ -126,7 +142,7 @@ export default function GameApp() {
       setYearInput('')
     }
 
-    const won = newBrandLocked && newYearLocked
+    const won = newCategoryLocked && newBrandLocked && newYearLocked
 
     if (won) {
       setStatus('won')
@@ -150,21 +166,25 @@ export default function GameApp() {
   const parsedYear = parseInt(yearInput, 10)
   const yearValid = yearLocked || (!isNaN(parsedYear) && parsedYear >= 1950 && parsedYear <= 2025)
   const brandValid = brandLocked || brandInput.trim() !== ''
-  const canSubmit = status === 'playing' && brandValid && yearValid
+  const categoryValid = categoryLocked || categoryInput !== ''
+  const canSubmit = status === 'playing' && categoryValid && brandValid && yearValid
 
   const guessesLeft = MAX_GUESSES - guesses.length
   const lastGuess = guesses[guesses.length - 1]
 
   function submitHint(): string | null {
     if (canSubmit) return null
+    const noCategory = !categoryLocked && categoryInput === ''
     const noBrand = !brandLocked && brandInput.trim() === ''
     const noYear = !yearLocked && yearInput === ''
     const badYear = !yearLocked && !noYear && !yearValid
-    if (noBrand && noYear) return 'Enter a brand and a year to guess'
-    if (noBrand) return 'Enter a brand'
-    if (noYear) return 'Enter a year'
     if (badYear) return 'Year must be between 1950 and 2025'
-    return null
+    const parts: string[] = []
+    if (noCategory) parts.push('a category')
+    if (noBrand) parts.push('a brand')
+    if (noYear) parts.push('a year')
+    if (parts.length === 0) return null
+    return `Enter ${parts.join(' and ')} to guess`
   }
 
   // ── shell (always rendered, shared by all states) ─────────────────────────
@@ -245,6 +265,8 @@ export default function GameApp() {
             <span className="font-bold text-white">{puzzle.brand}</span>
             {', '}
             <span className="font-bold text-white">{puzzle.year}</span>
+            {' · '}
+            <span className="font-bold text-white">{puzzle.category}</span>
           </p>
           {puzzle.videoUrl && <PayoffVideo url={puzzle.videoUrl} />}
         </div>
@@ -253,6 +275,33 @@ export default function GameApp() {
       {/* Guess controls */}
       {status === 'playing' && (
         <div className="flex flex-col gap-3 bg-gray-900/80 rounded-2xl p-4 border border-gray-800">
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1.5">Category</label>
+            {categoryLocked ? (
+              <div className="w-full bg-green-900/30 border border-green-600/60 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+                <span className="text-green-400 font-bold">✓</span>
+                <span className="text-green-300 font-medium">{lockedCategoryValue}</span>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {PUZZLE_CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCategoryInput(cat)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                      categoryInput === cat
+                        ? 'bg-amber-500 text-black'
+                        : 'bg-gray-800 border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div>
             <label className="block text-xs text-gray-500 mb-1.5">Brand</label>

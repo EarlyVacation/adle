@@ -5,8 +5,10 @@ export type YearFeedback = 'correct' | 'too-early' | 'too-late'
 export type GuessResult = {
   brand: string
   year: number
+  category: string
   brandCorrect: boolean
   yearFeedback: YearFeedback
+  categoryCorrect: boolean
   isWin: boolean
 }
 
@@ -39,7 +41,7 @@ function levenshtein(a: string, b: string): number {
   return row[n]
 }
 
-export function evaluateGuess(puzzle: Puzzle, brand: string, year: number): GuessResult {
+export function evaluateGuess(puzzle: Puzzle, brand: string, year: number, category: string): GuessResult {
   const normGuess = normalize(brand)
   const allNorms = [normalize(puzzle.brand), ...puzzle.brandAliases.map(normalize)]
 
@@ -62,5 +64,11 @@ export function evaluateGuess(puzzle: Puzzle, brand: string, year: number): Gues
     yearFeedback = 'too-late'
   }
 
-  return { brand, year, brandCorrect, yearFeedback, isWin: brandCorrect && yearWithinRange }
+  const categoryCorrect = category === puzzle.category
+
+  return {
+    brand, year, category,
+    brandCorrect, yearFeedback, categoryCorrect,
+    isWin: brandCorrect && yearWithinRange && categoryCorrect,
+  }
 }
