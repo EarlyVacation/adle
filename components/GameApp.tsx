@@ -267,6 +267,9 @@ export default function GameApp() {
         </div>
       )}
 
+      {/* Guess history — sits above the controls so results are visible while typing */}
+      <GuessHistory guesses={guesses} />
+
       {/* Guess controls */}
       {status === 'playing' && (
         <div className="flex flex-col gap-3 bg-gray-900/80 rounded-2xl p-4 border border-gray-800">
@@ -390,9 +393,6 @@ export default function GameApp() {
           )}
         </div>
       )}
-
-      {/* Guess history — sits directly below the controls, most recent on top */}
-      <GuessHistory guesses={guesses} />
 
       {/* Puzzle navigation */}
       <div className="flex items-center justify-center gap-4">
