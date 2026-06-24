@@ -8,7 +8,7 @@ import { getStreak, incrementStreak, resetStreak } from '@/lib/streak'
 import StillsDisplay from './StillsDisplay'
 import BrandAutocomplete from './BrandAutocomplete'
 import GuessMarkers from './GuessMarkers'
-import GuessHistory from './GuessHistory'
+import GuessGrid from './GuessGrid'
 import DevControls from './DevControls'
 import PayoffVideo from './PayoffVideo'
 
@@ -47,10 +47,6 @@ export default function GameApp() {
   const [yearLocked, setYearLocked] = useState(false)
   const [lockedBrandValue, setLockedBrandValue] = useState('')
   const [lockedYearValue, setLockedYearValue] = useState(0)
-  // Incremented on each guess — changing the key on feedback elements forces
-  // them to remount and restart their CSS animations.
-  const [feedbackKey, setFeedbackKey] = useState(0)
-
   const brandInputRef = useRef<HTMLInputElement>(null)
   const yearInputRef = useRef<HTMLInputElement>(null)
 
@@ -114,7 +110,6 @@ export default function GameApp() {
     const result = evaluateGuess(puzzle, brandToUse, yearToUse, categoryToUse)
     const newGuesses = [...guesses, result]
     setGuesses(newGuesses)
-    setFeedbackKey(k => k + 1)
 
     let newCategoryLocked = categoryLocked
     let newBrandLocked = brandLocked
@@ -170,7 +165,6 @@ export default function GameApp() {
   const canSubmit = status === 'playing' && categoryValid && brandValid && yearValid
 
   const guessesLeft = MAX_GUESSES - guesses.length
-  const lastGuess = guesses[guesses.length - 1]
 
   function submitHint(): string | null {
     if (canSubmit) return null
@@ -267,8 +261,8 @@ export default function GameApp() {
         </div>
       )}
 
-      {/* Guess history — sits above the controls so results are visible while typing */}
-      <GuessHistory guesses={guesses} />
+      {/* Guess grid — always visible, reveals rows as guesses are submitted */}
+      <GuessGrid guesses={guesses} />
 
       {/* Guess controls */}
       {status === 'playing' && (
@@ -276,20 +270,7 @@ export default function GameApp() {
 
           {/* Category */}
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <label className="text-xs text-gray-500">Category</label>
-              {lastGuess && !categoryLocked && (
-                <span
-                  key={`cat-fb-${feedbackKey}`}
-                  style={{ animationDelay: '0ms' }}
-                  className={`animate-reveal-badge text-xs font-bold leading-none ${
-                    lastGuess.categoryCorrect ? 'text-green-400' : 'text-red-400'
-                  }`}
-                >
-                  {lastGuess.categoryCorrect ? '✓' : '✗'}
-                </span>
-              )}
-            </div>
+            <label className="block text-xs text-gray-500 mb-1.5">Category</label>
             {categoryLocked ? (
               <div className="animate-lock-pop w-full bg-green-900/30 border border-green-600/60 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
                 <span className="text-green-400 font-bold">✓</span>
@@ -302,20 +283,7 @@ export default function GameApp() {
 
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <label className="text-xs text-gray-500">Brand</label>
-              {lastGuess && !brandLocked && (
-                <span
-                  key={`brand-fb-${feedbackKey}`}
-                  style={{ animationDelay: '80ms' }}
-                  className={`animate-reveal-badge text-xs font-bold leading-none ${
-                    lastGuess.brandCorrect ? 'text-green-400' : 'text-red-400'
-                  }`}
-                >
-                  {lastGuess.brandCorrect ? '✓' : '✗'}
-                </span>
-              )}
-            </div>
+            <label className="block text-xs text-gray-500 mb-1.5">Brand</label>
             {brandLocked ? (
               <div className="animate-lock-pop w-full bg-green-900/30 border border-green-600/60 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
                 <span className="text-green-400 font-bold">✓</span>
@@ -335,44 +303,17 @@ export default function GameApp() {
                 <span className="text-green-300 font-medium">{lockedYearValue}</span>
               </div>
             ) : (
-              <>
-                <input
-                  ref={yearInputRef}
-                  type="number"
-                  min={1950}
-                  max={2025}
-                  value={yearInput}
-                  onChange={e => setYearInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && canSubmit && handleGuess()}
-                  placeholder="e.g. 1985"
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gray-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                />
-                {lastGuess && lastGuess.yearFeedback !== 'correct' && (
-                  <div
-                    key={`year-fb-${feedbackKey}`}
-                    style={{ animationDelay: '160ms' }}
-                    className={`animate-year-clue mt-2 flex items-center gap-3 rounded-lg px-3 py-2.5 ${
-                      lastGuess.yearFeedback === 'too-early'
-                        ? 'bg-blue-950/60 border border-blue-800/50 text-blue-300'
-                        : 'bg-orange-950/60 border border-orange-900/50 text-orange-300'
-                    }`}
-                  >
-                    <span className="text-2xl leading-none select-none">
-                      {lastGuess.yearFeedback === 'too-early' ? '↑' : '↓'}
-                    </span>
-                    <div>
-                      <p className="text-sm font-bold leading-tight">
-                        {lastGuess.yearFeedback === 'too-early' ? 'Later' : 'Earlier'}
-                      </p>
-                      <p className="text-xs opacity-60 leading-tight mt-0.5">
-                        {lastGuess.yearFeedback === 'too-early'
-                          ? 'The ad is from a later year'
-                          : 'The ad is from an earlier year'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </>
+              <input
+                ref={yearInputRef}
+                type="number"
+                min={1950}
+                max={2025}
+                value={yearInput}
+                onChange={e => setYearInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && canSubmit && handleGuess()}
+                placeholder="e.g. 1985"
+                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gray-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
             )}
           </div>
 

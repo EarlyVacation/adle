@@ -2,12 +2,15 @@ import { Puzzle } from './puzzles'
 
 export type YearFeedback = 'correct' | 'too-early' | 'too-late'
 
+export const CLOSE_YEARS = 5
+
 export type GuessResult = {
   brand: string
   year: number
   category: string
   brandCorrect: boolean
   yearFeedback: YearFeedback
+  yearAbsDiff: number
   categoryCorrect: boolean
   isWin: boolean
 }
@@ -64,11 +67,12 @@ export function evaluateGuess(puzzle: Puzzle, brand: string, year: number, categ
     yearFeedback = 'too-late'
   }
 
+  const yearAbsDiff = Math.abs(yearDiff)
   const categoryCorrect = category === puzzle.category
 
   return {
     brand, year, category,
-    brandCorrect, yearFeedback, categoryCorrect,
+    brandCorrect, yearFeedback, yearAbsDiff, categoryCorrect,
     isWin: brandCorrect && yearWithinRange && categoryCorrect,
   }
 }
