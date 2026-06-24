@@ -16,8 +16,6 @@ type GameStatus = 'playing' | 'won' | 'lost'
 
 const MAX_GUESSES = 5
 
-// Days since Unix epoch for today's date in the America/Halifax timezone.
-// Used to pick which puzzle to show by default.
 function getDailyPuzzleIndex(totalPuzzles: number): number {
   const halifaxDate = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Halifax',
@@ -25,14 +23,13 @@ function getDailyPuzzleIndex(totalPuzzles: number): number {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date())
-  // en-CA always produces YYYY-MM-DD; parse as UTC midnight for a stable number
   const dayNumber = Math.floor(Date.parse(halifaxDate + 'T00:00:00Z') / 86_400_000)
   return dayNumber % totalPuzzles
 }
 
 export default function GameApp() {
   // ── data ──────────────────────────────────────────────────────────────────
-  const [puzzles, setPuzzles] = useState<Puzzle[] | null>(null) // null = loading
+  const [puzzles, setPuzzles] = useState<Puzzle[] | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
   // ── game state ────────────────────────────────────────────────────────────
@@ -50,6 +47,9 @@ export default function GameApp() {
   const [yearLocked, setYearLocked] = useState(false)
   const [lockedBrandValue, setLockedBrandValue] = useState('')
   const [lockedYearValue, setLockedYearValue] = useState(0)
+  // Incremented on each guess — changing the key on feedback elements forces
+  // them to remount and restart their CSS animations.
+  const [feedbackKey, setFeedbackKey] = useState(0)
 
   const brandInputRef = useRef<HTMLInputElement>(null)
   const yearInputRef = useRef<HTMLInputElement>(null)
@@ -63,7 +63,6 @@ export default function GameApp() {
         setPuzzles(fetched)
         if (fetched.length === 0) return
 
-        // ?puzzle=<index> lets you preview a specific puzzle on the live site
         const params = new URLSearchParams(window.location.search)
         const override = params.get('puzzle')
         if (override !== null) {
@@ -115,6 +114,7 @@ export default function GameApp() {
     const result = evaluateGuess(puzzle, brandToUse, yearToUse, categoryToUse)
     const newGuesses = [...guesses, result]
     setGuesses(newGuesses)
+    setFeedbackKey(k => k + 1)
 
     let newCategoryLocked = categoryLocked
     let newBrandLocked = brandLocked
@@ -201,17 +201,13 @@ export default function GameApp() {
     </main>
   )
 
-  // ── loading ───────────────────────────────────────────────────────────────
+  // ── loading / error ───────────────────────────────────────────────────────
   if (fetchError) {
-    return shell(
-      <p className="text-red-400 text-sm text-center py-12">{fetchError}</p>
-    )
+    return shell(<p className="text-red-400 text-sm text-center py-12">{fetchError}</p>)
   }
 
   if (puzzles === null) {
-    return shell(
-      <p className="text-gray-500 text-sm text-center py-12">Loading…</p>
-    )
+    return shell(<p className="text-gray-500 text-sm text-center py-12">Loading…</p>)
   }
 
   if (puzzles.length === 0) {
@@ -235,7 +231,6 @@ export default function GameApp() {
         </div>
       </div>
 
-      {/* Dev controls — only rendered in local development, never on Vercel */}
       {process.env.NODE_ENV === 'development' && (
         <DevControls puzzles={puzzles} puzzleIndex={puzzleIndex} onChange={resetGame} />
       )}
@@ -276,10 +271,24 @@ export default function GameApp() {
       {status === 'playing' && (
         <div className="flex flex-col gap-3 bg-gray-900/80 rounded-2xl p-4 border border-gray-800">
 
+          {/* Category */}
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Category</label>
+            <div className="flex items-center gap-2 mb-1.5">
+              <label className="text-xs text-gray-500">Category</label>
+              {lastGuess && !categoryLocked && (
+                <span
+                  key={`cat-fb-${feedbackKey}`}
+                  style={{ animationDelay: '0ms' }}
+                  className={`animate-reveal-badge text-xs font-bold leading-none ${
+                    lastGuess.categoryCorrect ? 'text-green-400' : 'text-red-400'
+                  }`}
+                >
+                  {lastGuess.categoryCorrect ? '✓' : '✗'}
+                </span>
+              )}
+            </div>
             {categoryLocked ? (
-              <div className="w-full bg-green-900/30 border border-green-600/60 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+              <div className="animate-lock-pop w-full bg-green-900/30 border border-green-600/60 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
                 <span className="text-green-400 font-bold">✓</span>
                 <span className="text-green-300 font-medium">{lockedCategoryValue}</span>
               </div>
@@ -288,10 +297,24 @@ export default function GameApp() {
             )}
           </div>
 
+          {/* Brand */}
           <div>
-            <label className="block text-xs text-gray-500 mb-1.5">Brand</label>
+            <div className="flex items-center gap-2 mb-1.5">
+              <label className="text-xs text-gray-500">Brand</label>
+              {lastGuess && !brandLocked && (
+                <span
+                  key={`brand-fb-${feedbackKey}`}
+                  style={{ animationDelay: '80ms' }}
+                  className={`animate-reveal-badge text-xs font-bold leading-none ${
+                    lastGuess.brandCorrect ? 'text-green-400' : 'text-red-400'
+                  }`}
+                >
+                  {lastGuess.brandCorrect ? '✓' : '✗'}
+                </span>
+              )}
+            </div>
             {brandLocked ? (
-              <div className="w-full bg-green-900/30 border border-green-600/60 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+              <div className="animate-lock-pop w-full bg-green-900/30 border border-green-600/60 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
                 <span className="text-green-400 font-bold">✓</span>
                 <span className="text-green-300 font-medium">{lockedBrandValue}</span>
               </div>
@@ -300,10 +323,11 @@ export default function GameApp() {
             )}
           </div>
 
+          {/* Year */}
           <div>
             <label className="block text-xs text-gray-500 mb-1.5">Year (1950–2025)</label>
             {yearLocked ? (
-              <div className="w-full bg-green-900/30 border border-green-600/60 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+              <div className="animate-lock-pop w-full bg-green-900/30 border border-green-600/60 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
                 <span className="text-green-400 font-bold">✓</span>
                 <span className="text-green-300 font-medium">{lockedYearValue}</span>
               </div>
@@ -321,9 +345,29 @@ export default function GameApp() {
                   className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gray-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 {lastGuess && lastGuess.yearFeedback !== 'correct' && (
-                  <p className={`text-xs mt-1 ${lastGuess.yearFeedback === 'too-early' ? 'text-blue-400/70' : 'text-orange-400/70'}`}>
-                    {lastGuess.yearFeedback === 'too-early' ? '↑ Try later' : '↓ Try earlier'}
-                  </p>
+                  <div
+                    key={`year-fb-${feedbackKey}`}
+                    style={{ animationDelay: '160ms' }}
+                    className={`animate-year-clue mt-2 flex items-center gap-3 rounded-lg px-3 py-2.5 ${
+                      lastGuess.yearFeedback === 'too-early'
+                        ? 'bg-blue-950/60 border border-blue-800/50 text-blue-300'
+                        : 'bg-orange-950/60 border border-orange-900/50 text-orange-300'
+                    }`}
+                  >
+                    <span className="text-2xl leading-none select-none">
+                      {lastGuess.yearFeedback === 'too-early' ? '↑' : '↓'}
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold leading-tight">
+                        {lastGuess.yearFeedback === 'too-early' ? 'Later' : 'Earlier'}
+                      </p>
+                      <p className="text-xs opacity-60 leading-tight mt-0.5">
+                        {lastGuess.yearFeedback === 'too-early'
+                          ? 'The ad is from a later year'
+                          : 'The ad is from an earlier year'}
+                      </p>
+                    </div>
+                  </div>
                 )}
               </>
             )}
@@ -347,6 +391,9 @@ export default function GameApp() {
         </div>
       )}
 
+      {/* Guess history — sits directly below the controls, most recent on top */}
+      <GuessHistory guesses={guesses} />
+
       {/* Puzzle navigation */}
       <div className="flex items-center justify-center gap-4">
         <button
@@ -367,9 +414,6 @@ export default function GameApp() {
           ›
         </button>
       </div>
-
-      {/* Guess history */}
-      <GuessHistory guesses={guesses} />
 
     </main>
   )

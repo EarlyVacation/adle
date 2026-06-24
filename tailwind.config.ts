@@ -6,7 +6,30 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      keyframes: {
+        'reveal-badge': {
+          '0%':   { opacity: '0', transform: 'scale(0.4)' },
+          '60%':  { opacity: '1', transform: 'scale(1.25)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'lock-pop': {
+          '0%':   { opacity: '0', transform: 'scaleY(0.85)' },
+          '55%':  { transform: 'scaleY(1.04)' },
+          '100%': { opacity: '1', transform: 'scaleY(1)' },
+        },
+        'year-clue': {
+          '0%':   { opacity: '0', transform: 'translateY(6px) scale(0.96)' },
+          '55%':  { transform: 'translateY(-2px) scale(1.01)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+      },
+      animation: {
+        'reveal-badge': 'reveal-badge 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        'lock-pop':     'lock-pop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        'year-clue':    'year-clue 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
+      },
+    },
   },
   plugins: [],
 }

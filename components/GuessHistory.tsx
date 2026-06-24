@@ -4,43 +4,74 @@ interface Props {
   guesses: GuessResult[]
 }
 
-const YEAR_FEEDBACK: Record<string, { label: string; cls: string }> = {
-  correct:    { label: '✓ correct',   cls: 'text-green-400' },
-  'too-early': { label: '→ too early', cls: 'text-yellow-400' },
-  'too-late':  { label: '← too late',  cls: 'text-yellow-400' },
-}
-
 export default function GuessHistory({ guesses }: Props) {
   if (guesses.length === 0) return null
 
+  // Most recent guess on top
+  const reversed = [...guesses].reverse()
+
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-xs text-gray-600 uppercase tracking-wider">Previous guesses</p>
-      {guesses.map((g, i) => {
-        const yf = YEAR_FEEDBACK[g.yearFeedback]
+    <div className="flex flex-col gap-1.5">
+      <p className="text-xs text-gray-700 uppercase tracking-wider px-0.5">Past guesses</p>
+      {reversed.map((g, ri) => {
+        const originalIndex = guesses.length - 1 - ri
+        const isLatest = originalIndex === guesses.length - 1
         return (
           <div
-            key={i}
-            className="bg-gray-900 rounded-lg px-3 py-2.5 flex flex-col gap-1 text-sm"
+            key={originalIndex}
+            className={`flex items-center gap-0 px-3 py-1.5 rounded-lg text-xs tabular-nums ${
+              isLatest ? 'bg-gray-800 border border-gray-700/60' : 'bg-gray-900 border border-transparent'
+            }`}
           >
-            <div className="flex items-center gap-2 text-xs">
-              <span className={g.categoryCorrect ? 'text-green-400' : 'text-red-400'}>
-                {g.categoryCorrect ? '✓' : '✗'}
-              </span>
-              <span className={g.categoryCorrect ? 'text-green-300' : 'text-gray-400'}>
-                {g.category}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="flex-1 min-w-0 truncate">
-                <span className={g.brandCorrect ? 'text-green-400' : 'text-red-400'}>
-                  {g.brandCorrect ? '✓' : '✗'}
-                </span>{' '}
-                <span className="text-gray-200">{g.brand}</span>
-              </span>
-              <span className="text-gray-400 shrink-0">{g.year}</span>
-              <span className={`${yf.cls} text-xs shrink-0`}>{yf.label}</span>
-            </div>
+            {/* Category */}
+            <span
+              className={`shrink-0 font-bold w-3.5 ${
+                g.categoryCorrect ? 'text-green-400' : 'text-red-500'
+              }`}
+            >
+              {g.categoryCorrect ? '✓' : '✗'}
+            </span>
+            <span
+              className={`ml-1 shrink-0 max-w-[5.5rem] overflow-hidden text-ellipsis whitespace-nowrap ${
+                g.categoryCorrect ? 'text-green-300' : 'text-gray-500'
+              }`}
+            >
+              {g.category}
+            </span>
+
+            <span className="mx-2 text-gray-700 shrink-0">·</span>
+
+            {/* Brand */}
+            <span
+              className={`shrink-0 font-bold w-3.5 ${
+                g.brandCorrect ? 'text-green-400' : 'text-red-500'
+              }`}
+            >
+              {g.brandCorrect ? '✓' : '✗'}
+            </span>
+            <span
+              className={`ml-1 flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${
+                g.brandCorrect ? 'text-green-300' : 'text-gray-400'
+              }`}
+            >
+              {g.brand}
+            </span>
+
+            <span className="mx-2 text-gray-700 shrink-0">·</span>
+
+            {/* Year + direction */}
+            <span className="shrink-0 text-gray-400">{g.year}</span>
+            <span
+              className={`ml-1.5 shrink-0 font-bold text-sm leading-none ${
+                g.yearFeedback === 'correct'
+                  ? 'text-green-400'
+                  : g.yearFeedback === 'too-early'
+                  ? 'text-blue-400'
+                  : 'text-orange-400'
+              }`}
+            >
+              {g.yearFeedback === 'correct' ? '✓' : g.yearFeedback === 'too-early' ? '↑' : '↓'}
+            </span>
           </div>
         )
       })}
