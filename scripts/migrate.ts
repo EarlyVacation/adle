@@ -56,7 +56,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
 interface PuzzleEntry {
   brand: string
   brandAliases: string[]
-  category?: string
+  category: string
   year: number
   stills: string[]   // public/-relative paths, e.g. /puzzles/apple-2018/1.png
   videoUrl: string | null
@@ -66,6 +66,7 @@ const PUZZLES: PuzzleEntry[] = [
   {
     brand: 'Apple',
     brandAliases: [],
+    category: 'Tech',
     year: 2018,
     stills: [
       '/puzzles/apple-welcome-home-2018/1.png',
@@ -79,6 +80,7 @@ const PUZZLES: PuzzleEntry[] = [
   {
     brand: 'Pepsi',
     brandAliases: [],
+    category: 'Drink',
     year: 2018,
     stills: [
       '/puzzles/pepsi-2018/1.png',
@@ -92,6 +94,7 @@ const PUZZLES: PuzzleEntry[] = [
   {
     brand: 'Mitsubishi',
     brandAliases: [],
+    category: 'Auto',
     year: 2021,
     stills: [
       '/puzzles/bob-mills-mitsubishi-2021/1.png',
@@ -105,6 +108,7 @@ const PUZZLES: PuzzleEntry[] = [
   {
     brand: 'Lays',
     brandAliases: [],
+    category: 'Food',
     year: 2025,
     stills: [
       '/puzzles/lays-2025/1.png',
@@ -118,6 +122,7 @@ const PUZZLES: PuzzleEntry[] = [
   {
     brand: 'Mountain Dew',
     brandAliases: [],
+    category: 'Drink',
     year: 2025,
     stills: [
       '/puzzles/mountain-dew-2025/1.png',
@@ -131,6 +136,7 @@ const PUZZLES: PuzzleEntry[] = [
   {
     brand: 'Little Caesars',
     brandAliases: [],
+    category: 'Food',
     year: 2020,
     stills: [
       '/puzzles/little-caesars-2020/1.png',
@@ -144,6 +150,7 @@ const PUZZLES: PuzzleEntry[] = [
   {
     brand: 'Nutrigrain',
     brandAliases: [],
+    category: 'Food',
     year: 2006,
     stills: [
       '/puzzles/nutrigrain-2006/1.png',
@@ -260,7 +267,7 @@ async function main() {
     const { error: insertErr } = await supabase.from('puzzles').insert({
       brand:         p.brand,
       brand_aliases: p.brandAliases,
-      category:      p.category ?? null,
+      category:      p.category,
       year:          p.year,
       still_urls:    stillUrls,
       video_url:     p.videoUrl,

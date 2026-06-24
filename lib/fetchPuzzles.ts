@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Puzzle } from './puzzles'
+import type { Puzzle, PuzzleCategory } from './puzzles'
 
 interface PuzzleRow {
   id: string
@@ -24,7 +24,7 @@ export async function fetchPuzzles(): Promise<Puzzle[]> {
     id: row.id,
     brand: row.brand,
     brandAliases: row.brand_aliases ?? [],
-    category: row.category ?? '',
+    category: (row.category ?? 'Uncategorized') as PuzzleCategory,
     year: row.year,
     stills: row.still_urls ?? [],
     videoUrl: row.video_url,

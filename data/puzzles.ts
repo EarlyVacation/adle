@@ -26,13 +26,14 @@
  *    },
  */
 
-import { Puzzle } from '@/lib/puzzles'
+import { Puzzle, PuzzleCategory } from '@/lib/puzzles'
 
 export const PUZZLES: Puzzle[] = [
   {
     id: 'Apple Welcome Home',
     brand: 'Apple',
     brandAliases: [],
+    category: 'Tech' as PuzzleCategory,
     year: 2018,
     stills: [
       '/puzzles/apple-welcome-home-2018/1.png',
@@ -47,6 +48,7 @@ export const PUZZLES: Puzzle[] = [
     id: '2',
     brand: 'Pepsi',
     brandAliases: [],
+    category: 'Drink' as PuzzleCategory,
     year: 2018,
     stills: [
       '/puzzles/pepsi-2018/1.png',
@@ -61,6 +63,7 @@ export const PUZZLES: Puzzle[] = [
     id: 'Bob Mills Mitsubishi',
     brand: 'Mitsubishi',
     brandAliases: [],
+    category: 'Auto' as PuzzleCategory,
     year: 2021,
     stills: [
       '/puzzles/bob-mills-mitsubishi-2021/1.png',
@@ -75,6 +78,7 @@ export const PUZZLES: Puzzle[] = [
     id: '3',
     brand: 'Lays',
     brandAliases: [],
+    category: 'Food' as PuzzleCategory,
     year: 2025,
     stills: [
       '/puzzles/lays-2025/1.png',
@@ -89,6 +93,7 @@ export const PUZZLES: Puzzle[] = [
     id: 'Mountain Dew - Baja',
     brand: 'Mountain Dew',
     brandAliases: [],
+    category: 'Drink' as PuzzleCategory,
     year: 2025,
     stills: [
       '/puzzles/mountain-dew-2025/1.png',
@@ -103,6 +108,7 @@ export const PUZZLES: Puzzle[] = [
     id: 'Little Caesars - sliced Bread',
     brand: 'Little Caesars',
     brandAliases: [],
+    category: 'Food' as PuzzleCategory,
     year: 2020,
     stills: [
       '/puzzles/little-caesars-2020/1.png',
@@ -117,6 +123,7 @@ export const PUZZLES: Puzzle[] = [
     id: 'Nutrigrain',
     brand: 'Nutrigrain',
     brandAliases: [],
+    category: 'Food' as PuzzleCategory,
     year: 2006,
     stills: [
       '/puzzles/nutrigrain-2006/1.png',
