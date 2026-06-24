@@ -7,18 +7,18 @@ import { PUZZLE_CATEGORIES, type PuzzleCategory } from '@/lib/puzzles'
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
-interface ImageItem {
-  id: string
-  file: File
-  preview: string // object URL — revoke on remove/reset
-}
+type StillItem =
+  | { kind: 'existing'; id: string; url: string }
+  | { kind: 'new'; id: string; file: File; preview: string }
 
 interface PuzzleRow {
   id: string
   brand: string
+  brand_aliases: string[] | null
   year: number
   category: string
   still_urls: string[] | null
+  video_url: string | null
 }
 
 // ── utilities ─────────────────────────────────────────────────────────────────
@@ -52,6 +52,18 @@ async function compressImage(file: File): Promise<Blob> {
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+// "/stills/apple-2018-xxx/1.jpg"  →  "apple-2018-xxx/1.jpg"
+function urlToStoragePath(url: string): string {
+  const marker = '/stills/'
+  const idx = url.indexOf(marker)
+  return idx >= 0 ? url.slice(idx + marker.length) : ''
+}
+
+// "apple-2018-xxx/1.jpg"  →  "apple-2018-xxx"
+function folderFromUrl(url: string): string {
+  return urlToStoragePath(url).split('/')[0]
 }
 
 // ── shared UI ─────────────────────────────────────────────────────────────────
@@ -160,12 +172,14 @@ function Dashboard() {
   const [listLoading, setListLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [editTarget, setEditTarget] = useState<PuzzleRow | null>(null)
+  const formTopRef = useRef<HTMLDivElement>(null)
 
   async function reload() {
     setListLoading(true)
     const { data } = await supabase
       .from('puzzles')
-      .select('id, brand, year, category, still_urls')
+      .select('id, brand, brand_aliases, year, category, still_urls, video_url')
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
     setPuzzles((data as PuzzleRow[]) ?? [])
@@ -177,11 +191,26 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  function startEdit(p: PuzzleRow) {
+    setEditTarget(p)
+    formTopRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  function handleSaved() {
+    setEditTarget(null)
+    reload()
+  }
+
+  function handleCancelEdit() {
+    setEditTarget(null)
+  }
+
   async function confirmDelete(id: string) {
     setDeleteLoading(true)
     await supabase.from('puzzles').delete().eq('id', id)
     setDeleteTarget(null)
     setDeleteLoading(false)
+    if (editTarget?.id === id) setEditTarget(null)
     reload()
   }
 
@@ -198,8 +227,15 @@ function Dashboard() {
         </button>
       </div>
 
-      {/* Create form */}
-      <CreateForm onCreated={reload} />
+      {/* Scroll anchor at the top of the form */}
+      <div ref={formTopRef} />
+
+      {/* Create / Edit form */}
+      <PuzzleForm
+        onSaved={handleSaved}
+        editTarget={editTarget}
+        onCancelEdit={handleCancelEdit}
+      />
 
       <hr className="border-gray-800" />
 
@@ -217,7 +253,9 @@ function Dashboard() {
             {puzzles.map((p, i) => (
               <div
                 key={p.id}
-                className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-xl p-3"
+                className={`flex items-center gap-3 bg-gray-900 border rounded-xl p-3 transition-colors ${
+                  editTarget?.id === p.id ? 'border-amber-700/60' : 'border-gray-800'
+                }`}
               >
                 <div className="w-16 h-10 rounded-lg bg-gray-800 overflow-hidden shrink-0">
                   {p.still_urls?.[0] && (
@@ -233,6 +271,12 @@ function Dashboard() {
                   <p className="text-xs text-gray-600">{p.category}</p>
                 </div>
                 <span className="text-xs text-gray-700 tabular-nums shrink-0">#{i + 1}</span>
+                <button
+                  onClick={() => startEdit(p)}
+                  className="text-xs text-gray-500 hover:text-amber-400 transition-colors shrink-0"
+                >
+                  Edit
+                </button>
                 <button
                   onClick={() => setDeleteTarget(p.id)}
                   className="text-xs text-red-900 hover:text-red-500 transition-colors shrink-0"
@@ -278,7 +322,7 @@ function Dashboard() {
   )
 }
 
-// ── create form ───────────────────────────────────────────────────────────────
+// ── puzzle form (create + edit) ───────────────────────────────────────────────
 
 const BLANK = {
   brand: '',
@@ -289,15 +333,49 @@ const BLANK = {
   videoUrl: '',
 }
 
-function CreateForm({ onCreated }: { onCreated: () => void }) {
+interface PuzzleFormProps {
+  onSaved: () => void
+  editTarget: PuzzleRow | null
+  onCancelEdit: () => void
+}
+
+function PuzzleForm({ onSaved, editTarget, onCancelEdit }: PuzzleFormProps) {
+  const isEdit = editTarget !== null
+
   const [f, setF] = useState(BLANK)
-  const [images, setImages] = useState<ImageItem[]>([])
+  const [stills, setStills] = useState<StillItem[]>([])
+  const [removedUrls, setRemovedUrls] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const dragFrom = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
+
+  // Pre-fill when entering edit mode; blank when cancelled or after create
+  useEffect(() => {
+    setRemovedUrls([])
+    if (editTarget) {
+      setF({
+        brand: editTarget.brand,
+        aliasInput: '',
+        aliases: editTarget.brand_aliases ?? [],
+        category: editTarget.category as PuzzleCategory,
+        year: String(editTarget.year),
+        videoUrl: editTarget.video_url ?? '',
+      })
+      setStills(
+        (editTarget.still_urls ?? []).map((url) => ({
+          kind: 'existing' as const,
+          id: crypto.randomUUID(),
+          url,
+        })),
+      )
+    } else {
+      setF(BLANK)
+      setStills([])
+    }
+  }, [editTarget])
 
   function upd(patch: Partial<typeof BLANK>) {
     setF((prev) => ({ ...prev, ...patch }))
@@ -310,25 +388,26 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
     upd({ aliases: [...new Set([...f.aliases, ...parts])], aliasInput: '' })
   }
 
-  // ── images ─────────────────────────────────────────────────────────────────
+  // ── stills ─────────────────────────────────────────────────────────────────
   function addFiles(files: FileList) {
-    const slots = 5 - images.length
-    const items: ImageItem[] = Array.from(files)
+    const slots = 5 - stills.length
+    const items: StillItem[] = Array.from(files)
       .slice(0, slots)
       .map((file) => ({
+        kind: 'new' as const,
         id: crypto.randomUUID(),
         file,
         preview: URL.createObjectURL(file),
       }))
-    setImages((prev) => [...prev, ...items])
+    setStills((prev) => [...prev, ...items])
   }
 
-  function removeImage(id: string) {
-    setImages((prev) => {
-      const item = prev.find((i) => i.id === id)
-      if (item) URL.revokeObjectURL(item.preview)
-      return prev.filter((i) => i.id !== id)
-    })
+  function removeStill(id: string) {
+    const item = stills.find((s) => s.id === id)
+    if (!item) return
+    if (item.kind === 'new') URL.revokeObjectURL(item.preview)
+    if (item.kind === 'existing') setRemovedUrls((r) => [...r, item.url])
+    setStills((prev) => prev.filter((s) => s.id !== id))
   }
 
   // ── drag-to-reorder ────────────────────────────────────────────────────────
@@ -340,7 +419,7 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
     e.preventDefault()
     const from = dragFrom.current
     if (from === null || from === toIndex) return
-    setImages((prev) => {
+    setStills((prev) => {
       const next = [...prev]
       const [item] = next.splice(from, 1)
       next.splice(toIndex, 0, item)
@@ -366,60 +445,92 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
     if (!f.category) return setError('Category is required')
     const year = parseInt(f.year, 10)
     if (isNaN(year) || year < 1950 || year > 2030) return setError('Year must be 1950–2030')
-    if (images.length === 0) return setError('Add at least one still image')
+    if (stills.length === 0) return setError('Add at least one still image')
 
     setSubmitting(true)
     try {
-      // Confirm the browser client still holds an authenticated session.
-      // getSession() forces the GoTrueClient to finish its async recovery and
-      // refresh the token if it has expired — so the upload request carries
-      // a valid Bearer token rather than hitting Storage as the anon role.
-      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession()
       console.log('[admin] upload user id:', currentSession?.user?.id ?? null)
       if (!currentSession) {
         throw new Error('Session expired — please sign out and sign in again.')
       }
 
-      // next sort_order = current max + 1
-      const { data: maxRows } = await supabase
-        .from('puzzles')
-        .select('sort_order')
-        .order('sort_order', { ascending: false })
-        .limit(1)
-      const nextSort = ((maxRows as { sort_order: number }[])?.[0]?.sort_order ?? 0) + 1
+      // ── determine storage folder for any new uploads ───────────────────────
+      const firstExisting = stills.find((s) => s.kind === 'existing')
+      const folder =
+        firstExisting && firstExisting.kind === 'existing'
+          ? folderFromUrl(firstExisting.url)
+          : `${slugify(brand)}-${year}-${Date.now()}`
 
-      // unique folder per puzzle to avoid collisions on re-upload
-      const slug = `${slugify(brand)}-${year}-${Date.now()}`
-
-      // compress + upload stills, preserving the user's chosen order
-      const stillUrls: string[] = []
-      for (let i = 0; i < images.length; i++) {
-        const blob = await compressImage(images[i].file)
-        const path = `${slug}/${i + 1}.jpg`
-        const { error: upErr } = await supabase.storage
-          .from('stills')
-          .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
-        if (upErr) throw new Error(`Image ${i + 1}: ${upErr.message}`)
-        const { data: urlData } = supabase.storage.from('stills').getPublicUrl(path)
-        stillUrls.push(urlData.publicUrl)
+      // ── delete removed existing stills from Storage ────────────────────────
+      for (const url of removedUrls) {
+        const path = urlToStoragePath(url)
+        if (path) await supabase.storage.from('stills').remove([path])
       }
 
-      const { error: insErr } = await supabase.from('puzzles').insert({
-        brand,
-        brand_aliases: f.aliases,
-        category: f.category,
-        year,
-        still_urls: stillUrls,
-        video_url: f.videoUrl.trim() || null,
-        sort_order: nextSort,
-      })
-      if (insErr) throw new Error(insErr.message)
+      // ── upload new stills + build final ordered still_urls ─────────────────
+      const stillUrls: string[] = []
+      let newIdx = 0
+      for (const item of stills) {
+        if (item.kind === 'existing') {
+          stillUrls.push(item.url)
+        } else {
+          const blob = await compressImage(item.file)
+          const path = `${folder}/new-${Date.now()}-${newIdx++}.jpg`
+          const { error: upErr } = await supabase.storage
+            .from('stills')
+            .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
+          if (upErr) throw new Error(`Image upload failed: ${upErr.message}`)
+          const { data: urlData } = supabase.storage.from('stills').getPublicUrl(path)
+          stillUrls.push(urlData.publicUrl)
+        }
+      }
 
-      setSuccess(`"${brand}" saved.`)
-      images.forEach((img) => URL.revokeObjectURL(img.preview))
-      setImages([])
-      setF(BLANK)
-      onCreated()
+      if (isEdit) {
+        // ── UPDATE existing row ────────────────────────────────────────────
+        const { error: updErr } = await supabase
+          .from('puzzles')
+          .update({
+            brand,
+            brand_aliases: f.aliases,
+            category: f.category,
+            year,
+            still_urls: stillUrls,
+            video_url: f.videoUrl.trim() || null,
+          })
+          .eq('id', editTarget.id)
+        if (updErr) throw new Error(updErr.message)
+        setSuccess(`"${brand}" updated.`)
+        onSaved()
+      } else {
+        // ── INSERT new row ─────────────────────────────────────────────────
+        const { data: maxRows } = await supabase
+          .from('puzzles')
+          .select('sort_order')
+          .order('sort_order', { ascending: false })
+          .limit(1)
+        const nextSort =
+          ((maxRows as { sort_order: number }[])?.[0]?.sort_order ?? 0) + 1
+
+        const { error: insErr } = await supabase.from('puzzles').insert({
+          brand,
+          brand_aliases: f.aliases,
+          category: f.category,
+          year,
+          still_urls: stillUrls,
+          video_url: f.videoUrl.trim() || null,
+          sort_order: nextSort,
+        })
+        if (insErr) throw new Error(insErr.message)
+
+        setSuccess(`"${brand}" saved.`)
+        stills.forEach((s) => { if (s.kind === 'new') URL.revokeObjectURL(s.preview) })
+        setStills([])
+        setF(BLANK)
+        onSaved()
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -430,7 +541,7 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
   return (
     <section>
       <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-5">
-        Add puzzle
+        {isEdit ? `Editing — ${editTarget.brand} (${editTarget.year})` : 'Add puzzle'}
       </h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
@@ -531,8 +642,8 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
         </Field>
 
         {/* Stills */}
-        <Field label={`Still images (${images.length} / 5) — drag to reorder, cryptic → obvious`}>
-          {images.length < 5 && (
+        <Field label={`Still images (${stills.length} / 5) — drag to reorder, cryptic → obvious`}>
+          {stills.length < 5 && (
             <div
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
@@ -555,33 +666,36 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
             </div>
           )}
 
-          {images.length > 0 && (
+          {stills.length > 0 && (
             <div className="grid grid-cols-5 gap-2 mt-3">
-              {images.map((img, i) => (
-                <div
-                  key={img.id}
-                  draggable
-                  onDragStart={() => onDragStart(i)}
-                  onDragOver={(e) => onDragOver(e, i)}
-                  onDragEnd={onDragEnd}
-                  className={`relative aspect-video rounded-lg overflow-hidden cursor-grab active:cursor-grabbing ring-2 transition-all ${
-                    dragOver === i ? 'ring-amber-500' : 'ring-transparent'
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.preview} alt="" className="w-full h-full object-cover" />
-                  <span className="absolute top-1 left-1 bg-black/60 rounded text-[10px] text-white w-4 h-4 flex items-center justify-center font-mono leading-none select-none">
-                    {i + 1}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeImage(img.id)}
-                    className="absolute top-1 right-1 bg-black/60 hover:bg-red-800 rounded text-white text-[10px] w-4 h-4 flex items-center justify-center leading-none transition-colors"
+              {stills.map((still, i) => {
+                const src = still.kind === 'existing' ? still.url : still.preview
+                return (
+                  <div
+                    key={still.id}
+                    draggable
+                    onDragStart={() => onDragStart(i)}
+                    onDragOver={(e) => onDragOver(e, i)}
+                    onDragEnd={onDragEnd}
+                    className={`relative aspect-video rounded-lg overflow-hidden cursor-grab active:cursor-grabbing ring-2 transition-all ${
+                      dragOver === i ? 'ring-amber-500' : 'ring-transparent'
+                    }`}
                   >
-                    ×
-                  </button>
-                </div>
-              ))}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                    <span className="absolute top-1 left-1 bg-black/60 rounded text-[10px] text-white w-4 h-4 flex items-center justify-center font-mono leading-none select-none">
+                      {i + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeStill(still.id)}
+                      className="absolute top-1 right-1 bg-black/60 hover:bg-red-800 rounded text-white text-[10px] w-4 h-4 flex items-center justify-center leading-none transition-colors"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           )}
         </Field>
@@ -589,13 +703,25 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
         {error && <p className="text-red-400 text-sm">{error}</p>}
         {success && <p className="text-green-400 text-sm">{success}</p>}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold text-sm rounded-xl py-2.5 transition-colors"
-        >
-          {submitting ? 'Saving…' : 'Save puzzle'}
-        </button>
+        <div className="flex gap-3">
+          {isEdit && (
+            <button
+              type="button"
+              onClick={onCancelEdit}
+              disabled={submitting}
+              className="flex-1 border border-gray-700 text-gray-400 hover:text-white disabled:opacity-40 text-sm rounded-xl py-2.5 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={submitting}
+            className={`${isEdit ? 'flex-1' : 'w-full'} bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold text-sm rounded-xl py-2.5 transition-colors`}
+          >
+            {submitting ? 'Saving…' : isEdit ? 'Update puzzle' : 'Save puzzle'}
+          </button>
+        </div>
       </form>
     </section>
   )
