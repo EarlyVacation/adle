@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { fetchPuzzles } from '@/lib/fetchPuzzles'
 import type { Puzzle } from '@/lib/puzzles'
-import { PUZZLE_CATEGORIES } from '@/lib/puzzles'
 import { evaluateGuess, GuessResult } from '@/lib/gameLogic'
+import CategoryAutocomplete from './CategoryAutocomplete'
 import { getStreak, incrementStreak, resetStreak } from '@/lib/streak'
 import StillsDisplay from './StillsDisplay'
 import BrandAutocomplete from './BrandAutocomplete'
@@ -284,22 +284,7 @@ export default function GameApp() {
                 <span className="text-green-300 font-medium">{lockedCategoryValue}</span>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {PUZZLE_CATEGORIES.map(cat => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategoryInput(cat)}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                      categoryInput === cat
-                        ? 'bg-amber-500 text-black'
-                        : 'bg-gray-800 border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
+              <CategoryAutocomplete value={categoryInput} onChange={setCategoryInput} />
             )}
           </div>
 
