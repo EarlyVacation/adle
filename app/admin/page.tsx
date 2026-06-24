@@ -370,6 +370,16 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
 
     setSubmitting(true)
     try {
+      // Confirm the browser client still holds an authenticated session.
+      // getSession() forces the GoTrueClient to finish its async recovery and
+      // refresh the token if it has expired — so the upload request carries
+      // a valid Bearer token rather than hitting Storage as the anon role.
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      console.log('[admin] upload user id:', currentSession?.user?.id ?? null)
+      if (!currentSession) {
+        throw new Error('Session expired — please sign out and sign in again.')
+      }
+
       // next sort_order = current max + 1
       const { data: maxRows } = await supabase
         .from('puzzles')
