@@ -31,7 +31,7 @@ const config: Config = {
         },
       },
       animation: {
-        'dot-flip':     'dot-flip 280ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        'dot-flip':     'dot-flip 480ms ease-in-out both',
         'reveal-badge': 'reveal-badge 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
         'lock-pop':     'lock-pop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both',
         'year-clue':    'year-clue 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both',

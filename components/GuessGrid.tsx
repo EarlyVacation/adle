@@ -70,8 +70,8 @@ export default function GuessGrid({ guesses }: Props) {
             {g ? (
               <>
                 <CategoryBrandDot correct={g.categoryCorrect} delay={0} />
-                <CategoryBrandDot correct={g.brandCorrect} delay={180} />
-                <YearDot guess={g} delay={360} />
+                <CategoryBrandDot correct={g.brandCorrect} delay={380} />
+                <YearDot guess={g} delay={760} />
               </>
             ) : (
               <>
