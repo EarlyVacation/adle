@@ -119,6 +119,8 @@ export default function GameApp() {
       setCategoryLocked(true)
       setLockedCategoryValue(categoryToUse)
       newCategoryLocked = true
+    } else if (!categoryLocked) {
+      setCategoryInput('')
     }
 
     if (!brandLocked && result.brandCorrect) {
