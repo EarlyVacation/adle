@@ -68,35 +68,38 @@ export default function GuessGrid({ guesses, onLastDotEnd }: Props) {
       className={[
         'mx-auto w-fit items-center',
         'grid',
-        'grid-cols-[repeat(5,2.25rem)_auto]',
+        'grid-cols-[auto_repeat(5,2.25rem)]',
         'gap-x-1.5 gap-y-2',
-        'sm:grid-cols-[repeat(5,2.5rem)_auto]',
+        'sm:grid-cols-[auto_repeat(5,2.5rem)]',
         'sm:gap-x-2 sm:gap-y-2.5',
       ].join(' ')}
     >
       {/* ── Category row (delay 0 ms) ───────────────────────────────────── */}
+      <span className="pr-2 sm:pr-3 text-sm font-medium text-gray-400 whitespace-nowrap">
+        Category
+      </span>
       {Array.from({ length: MAX_GUESSES }, (_, i) => {
         const g = guesses[i]
         return g
           ? <CategoryBrandDot key={`cat-${i}`} correct={g.categoryCorrect} delay={0} />
           : <EmptyDot key={`cat-${i}`} />
       })}
-      <span className="pl-2 sm:pl-3 text-sm font-medium text-gray-400 whitespace-nowrap">
-        Category
-      </span>
 
       {/* ── Brand row (delay 380 ms) ────────────────────────────────────── */}
+      <span className="pr-2 sm:pr-3 text-sm font-medium text-gray-400 whitespace-nowrap">
+        Brand
+      </span>
       {Array.from({ length: MAX_GUESSES }, (_, i) => {
         const g = guesses[i]
         return g
           ? <CategoryBrandDot key={`brand-${i}`} correct={g.brandCorrect} delay={380} />
           : <EmptyDot key={`brand-${i}`} />
       })}
-      <span className="pl-2 sm:pl-3 text-sm font-medium text-gray-400 whitespace-nowrap">
-        Brand
-      </span>
 
       {/* ── Year row (delay 760 ms) — last dot fires onLastDotEnd ────────── */}
+      <span className="pr-2 sm:pr-3 text-sm font-medium text-gray-400 whitespace-nowrap">
+        Year
+      </span>
       {Array.from({ length: MAX_GUESSES }, (_, i) => {
         const g = guesses[i]
         return g ? (
@@ -110,9 +113,6 @@ export default function GuessGrid({ guesses, onLastDotEnd }: Props) {
           <EmptyDot key={`year-${i}`} />
         )
       })}
-      <span className="pl-2 sm:pl-3 text-sm font-medium text-gray-400 whitespace-nowrap">
-        Year
-      </span>
     </div>
   )
 }
