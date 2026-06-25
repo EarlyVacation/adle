@@ -47,8 +47,16 @@ export default function GameApp() {
   const [yearLocked, setYearLocked] = useState(false)
   const [lockedBrandValue, setLockedBrandValue] = useState('')
   const [lockedYearValue, setLockedYearValue] = useState(0)
+  // pendingStatus: game has ended but the reveal animation is still playing.
+  // Status transitions to won/lost only after the last dot's animation fires.
+  const [pendingStatus, setPendingStatus] = useState<'won' | 'lost' | null>(null)
+  const postAnimTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const brandInputRef = useRef<HTMLInputElement>(null)
   const yearInputRef = useRef<HTMLInputElement>(null)
+
+  // Cancel any post-animation timeout on unmount
+  useEffect(() => () => { if (postAnimTimeout.current) clearTimeout(postAnimTimeout.current) }, [])
 
   // ── fetch on mount ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -79,6 +87,8 @@ export default function GameApp() {
 
   // ── game actions ──────────────────────────────────────────────────────────
   function resetGame(newIndex: number) {
+    if (postAnimTimeout.current) { clearTimeout(postAnimTimeout.current); postAnimTimeout.current = null }
+    setPendingStatus(null)
     setPuzzleIndex(newIndex)
     setGuesses([])
     setStatus('playing')
@@ -94,8 +104,20 @@ export default function GameApp() {
     setLockedYearValue(0)
   }
 
+  // Called by GuessGrid when the last row's Year dot finishes its flip animation.
+  function handleLastDotEnd() {
+    if (!pendingStatus) return
+    const resolved = pendingStatus
+    setPendingStatus(null)
+    const beat = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350
+    postAnimTimeout.current = setTimeout(() => {
+      setStatus(resolved)
+      postAnimTimeout.current = null
+    }, beat)
+  }
+
   function handleGuess() {
-    if (status !== 'playing' || !puzzles) return
+    if (status !== 'playing' || pendingStatus || !puzzles) return
 
     const categoryToUse = categoryLocked ? lockedCategoryValue : categoryInput
     const brandToUse = brandLocked ? lockedBrandValue : brandInput.trim()
@@ -142,13 +164,13 @@ export default function GameApp() {
     const won = newCategoryLocked && newBrandLocked && newYearLocked
 
     if (won) {
-      setStatus('won')
       setStreak(incrementStreak())
+      setPendingStatus('won')
     } else if (newGuesses.length >= MAX_GUESSES) {
-      setStatus('lost')
       resetStreak()
       setStreak(0)
       setRevealedStills(5)
+      setPendingStatus('lost')
     } else {
       setRevealedStills(s => Math.min(s + 1, 5))
     }
@@ -264,10 +286,13 @@ export default function GameApp() {
       )}
 
       {/* Guess grid — always visible, reveals rows as guesses are submitted */}
-      <GuessGrid guesses={guesses} />
+      <GuessGrid
+        guesses={guesses}
+        onLastDotEnd={pendingStatus ? handleLastDotEnd : undefined}
+      />
 
-      {/* Guess controls */}
-      {status === 'playing' && (
+      {/* Guess controls — hidden while the end-of-game animation plays */}
+      {status === 'playing' && !pendingStatus && (
         <div className="flex flex-col gap-3 bg-gray-900/80 rounded-2xl p-4 border border-gray-800">
 
           {/* Category */}
